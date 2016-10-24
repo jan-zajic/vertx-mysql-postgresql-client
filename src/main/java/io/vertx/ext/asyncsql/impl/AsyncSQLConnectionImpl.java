@@ -33,6 +33,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import scala.Option;
+import scala.collection.IterableLike;
 import scala.concurrent.ExecutionContext;
 import scala.runtime.AbstractFunction1;
 
@@ -298,7 +299,7 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
 
   private List<JsonArray> rowDataSeqToJsonArray(com.github.mauricio.async.db.ResultSet set) {
     List<JsonArray> list = new ArrayList<>();
-    set.foreach(new AbstractFunction1<RowData, Void>() {
+    ((IterableLike<RowData, ?>)set).foreach(new AbstractFunction1<RowData, Void>() {
       @Override
       public Void apply(RowData row) {
         list.add(rowToJsonArray(row));
@@ -310,7 +311,7 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
 
   private JsonArray rowToJsonArray(RowData data) {
     JsonArray array = new JsonArray();
-    data.foreach(new AbstractFunction1<Object, Void>() {
+    ((IterableLike<Object, ?>)data).foreach(new AbstractFunction1<Object, Void>() {
       @Override
       public Void apply(Object value) {
         convertValue(array, value);
