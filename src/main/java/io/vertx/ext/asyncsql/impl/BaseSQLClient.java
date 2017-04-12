@@ -63,13 +63,22 @@ public abstract class BaseSQLClient {
   protected abstract SQLConnection createFromPool(Connection conn, AsyncConnectionPool pool, ExecutionContext ec);
 
   public void getConnection(Handler<AsyncResult<SQLConnection>> handler) {
+    getConnection(handler, 1);
+  }
+  
+  public void getConnection(Handler<AsyncResult<SQLConnection>> handler, int recursion) {
     pool().take(ar -> {
       if (ar.succeeded()) {
         final AsyncConnectionPool pool = pool();
         ExecutionContext ec = VertxEventLoopExecutionContext.create(vertx);
         handler.handle(Future.succeededFuture(createFromPool(ar.result(), pool, ec)));
       } else {
-        handler.handle(Future.failedFuture(ar.cause()));
+        if(recursion > this.maxPoolSize)
+          handler.handle(Future.failedFuture(ar.cause()));
+        else {
+          log.warn("get connection attemp failed {} times. {}", recursion, ar.cause().getMessage());
+          getConnection(handler, recursion+1);
+        }
       }
     });
   }
