@@ -25,6 +25,7 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import scala.Function1;
+import scala.collection.IterableLike;
 import scala.collection.immutable.List;
 import scala.concurrent.ExecutionContext;
 import scala.runtime.AbstractFunction1;
@@ -99,7 +100,7 @@ public final class ScalaUtils {
 
   public static JsonArray rowToJsonArray(RowData data) {
     JsonArray array = new JsonArray();
-    data.foreach(new AbstractFunction1<Object, Void>() {
+    ((IterableLike<Object, ?>)data).foreach(new AbstractFunction1<Object, Void>() {
       @Override
       public Void apply(Object value) {
         if (value == null) {
