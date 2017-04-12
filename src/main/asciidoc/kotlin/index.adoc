@@ -67,13 +67,22 @@ You do this as follows:
 
 [source,java]
 ----
-JsonObject mySQLClientConfig = new JsonObject().put("host", "mymysqldb.mycompany");
-AsyncSQLClient mySQLClient = MySQLClient.createShared(vertx, mySQLClientConfig);
+
+// To create a MySQL client:
+
+var mySQLClientConfig = json {
+  obj("host" to "mymysqldb.mycompany")
+}
+var mySQLClient = MySQLClient.createShared(vertx, mySQLClientConfig)
 
 // To create a PostgreSQL client:
 
-JsonObject postgreSQLClientConfig = new JsonObject().put("host", "mypostgresqldb.mycompany");
-AsyncSQLClient postgreSQLClient = PostgreSQLClient.createShared(vertx, postgreSQLClientConfig);
+var postgreSQLClientConfig = json {
+  obj("host" to "mypostgresqldb.mycompany")
+}
+var postgreSQLClient = PostgreSQLClient.createShared(vertx, postgreSQLClientConfig)
+
+
 ----
 
 The first call to `link:../../apidocs/io/vertx/ext/asyncsql/MySQLClient.html#createShared-io.vertx.core.Vertx-io.vertx.core.json.JsonObject-[MySQLClient.createShared]`
@@ -88,13 +97,22 @@ You can create a client specifying a pool name as follows
 
 [source,java]
 ----
-JsonObject mySQLClientConfig = new JsonObject().put("host", "mymysqldb.mycompany");
-AsyncSQLClient mySQLClient = MySQLClient.createShared(vertx, mySQLClientConfig, "MySQLPool1");
+
+// To create a MySQL client:
+
+var mySQLClientConfig = json {
+  obj("host" to "mymysqldb.mycompany")
+}
+var mySQLClient = MySQLClient.createShared(vertx, mySQLClientConfig, "MySQLPool1")
 
 // To create a PostgreSQL client:
 
-JsonObject postgreSQLClientConfig = new JsonObject().put("host", "mypostgresqldb.mycompany");
-AsyncSQLClient postgreSQLClient = PostgreSQLClient.createShared(vertx, postgreSQLClientConfig, "PostgreSQLPool1");
+var postgreSQLClientConfig = json {
+  obj("host" to "mypostgresqldb.mycompany")
+}
+var postgreSQLClient = PostgreSQLClient.createShared(vertx, postgreSQLClientConfig, "PostgreSQLPool1")
+
+
 ----
 
 If different clients are created using the same Vert.x instance and specifying the same pool name, they will
@@ -119,13 +137,22 @@ or `link:../../apidocs/io/vertx/ext/asyncsql/PostgreSQLClient.html#createNonShar
 
 [source,java]
 ----
-JsonObject mySQLClientConfig = new JsonObject().put("host", "mymysqldb.mycompany");
-AsyncSQLClient mySQLClient = MySQLClient.createNonShared(vertx, mySQLClientConfig);
+
+// To create a MySQL client:
+
+var mySQLClientConfig = json {
+  obj("host" to "mymysqldb.mycompany")
+}
+var mySQLClient = MySQLClient.createNonShared(vertx, mySQLClientConfig)
 
 // To create a PostgreSQL client:
 
-JsonObject postgreSQLClientConfig = new JsonObject().put("host", "mypostgresqldb.mycompany");
-AsyncSQLClient postgreSQLClient = PostgreSQLClient.createNonShared(vertx, postgreSQLClientConfig);
+var postgreSQLClientConfig = json {
+  obj("host" to "mypostgresqldb.mycompany")
+}
+var postgreSQLClient = PostgreSQLClient.createNonShared(vertx, postgreSQLClientConfig)
+
+
 ----
 
 This is equivalent to calling `link:../../apidocs/io/vertx/ext/asyncsql/MySQLClient.html#createShared-io.vertx.core.Vertx-io.vertx.core.json.JsonObject-java.lang.String-[MySQLClient.createShared]`
@@ -146,17 +173,22 @@ This will return the connection in the handler when one is ready from the pool.
 
 [source,java]
 ----
-client.getConnection(res -> {
+
+// Now do stuff with it:
+
+client.getConnection({ res ->
   if (res.succeeded()) {
 
-    SQLConnection connection = res.result();
+    var connection = res.result()
 
     // Got a connection
 
   } else {
     // Failed to get connection - deal with it
   }
-});
+})
+
+
 ----
 
 Once you've finished with the connection make sure you close it afterwards.
@@ -164,7 +196,7 @@ Once you've finished with the connection make sure you close it afterwards.
 The connection is an instance of `link:../../apidocs/io/vertx/ext/sql/SQLConnection.html[SQLConnection]` which is a common interface used by
 other SQL clients.
 
-You can learn how to use it in the http://vertx.io/docs/vertx-sql-common/java/[common sql interface] documentation.
+You can learn how to use it in the http://vertx.io/docs/vertx-sql-common/kotlin/[common sql interface] documentation.
 
 === Note about date and timestamps
 

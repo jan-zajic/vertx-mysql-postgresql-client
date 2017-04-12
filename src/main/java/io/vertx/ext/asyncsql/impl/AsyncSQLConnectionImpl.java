@@ -24,20 +24,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.asyncsql.impl.pool.AsyncConnectionPool;
-import io.vertx.ext.sql.ResultSet;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.TransactionIsolation;
-import io.vertx.ext.sql.UpdateResult;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
+import io.vertx.ext.sql.*;
 import scala.Option;
 import scala.collection.IterableLike;
 import scala.concurrent.ExecutionContext;
 import scala.runtime.AbstractFunction1;
 
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -93,7 +85,7 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
   public SQLConnection execute(String sql, Handler<AsyncResult<Void>> handler) {
     beginTransactionIfNeeded(v -> {
       final scala.concurrent.Future<QueryResult> future = connection.sendQuery(sql);
-      future.onComplete(ScalaUtils.<QueryResult>toFunction1(ar -> {
+      future.onComplete(ScalaUtils.toFunction1(ar -> {
         if (ar.succeeded()) {
           handler.handle(Future.succeededFuture());
         } else {
@@ -116,11 +108,31 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
   }
 
   @Override
+  public SQLConnection queryStream(String sql, Handler<AsyncResult<SQLRowStream>> handler) {
+    beginTransactionIfNeeded(v -> {
+      final Future<QueryResult> future = ScalaUtils.scalaToVertx(connection.sendQuery(sql), executionContext);
+      future.setHandler(handleAsyncQueryResultToRowStream(handler));
+    });
+
+    return this;
+  }
+
+  @Override
   public SQLConnection queryWithParams(String sql, JsonArray params, Handler<AsyncResult<ResultSet>> handler) {
     beginTransactionIfNeeded(v -> {
       final scala.concurrent.Future<QueryResult> future = connection.sendPreparedStatement(sql,
           ScalaUtils.toScalaList(params.getList()));
       future.onComplete(ScalaUtils.toFunction1(handleAsyncQueryResultToResultSet(handler)), executionContext);
+    });
+
+    return this;
+  }
+
+  @Override
+  public SQLConnection queryStreamWithParams(String sql, JsonArray params, Handler<AsyncResult<SQLRowStream>> handler) {
+    beginTransactionIfNeeded(v -> {
+      final Future<QueryResult> future = ScalaUtils.scalaToVertx(connection.sendPreparedStatement(sql, ScalaUtils.toScalaList(params.getList())), executionContext);
+      future.setHandler(handleAsyncQueryResultToRowStream(handler));
     });
 
     return this;
@@ -215,6 +227,11 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
     throw new UnsupportedOperationException("Not implemented");
   }
 
+  @Override
+  @SuppressWarnings("unchecked")
+  public <C> C unwrap() {
+    return (C) connection;
+  }
 
   private SQLConnection endAndStartTransaction(String command, Handler<AsyncResult<Void>> handler) {
     if (inTransaction) {
@@ -267,14 +284,28 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
     };
   }
 
+  private Handler<AsyncResult<QueryResult>> handleAsyncQueryResultToRowStream(Handler<AsyncResult<SQLRowStream>> handler) {
+    return ar -> {
+      if (ar.succeeded()) {
+        try {
+          handler.handle(Future.succeededFuture(new AsyncSQLRowStream(ar.result())));
+        } catch (Throwable e) {
+          handler.handle(Future.failedFuture(e));
+        }
+      } else {
+        handler.handle(Future.failedFuture(ar.cause()));
+      }
+    };
+  }
+
   private ResultSet queryResultToResultSet(QueryResult qr) {
     final Option<com.github.mauricio.async.db.ResultSet> rows = qr.rows();
     if (!rows.isDefined()) {
-      return new ResultSet(Collections.emptyList(), Collections.emptyList());
+      return new ResultSet(Collections.emptyList(), Collections.emptyList(), null);
     } else {
       final List<String> names = ScalaUtils.toJavaList(rows.get().columnNames().toList());
       final List<JsonArray> arrays = rowDataSeqToJsonArray(rows.get());
-      return new ResultSet(names, arrays);
+      return new ResultSet(names, arrays, null);
     }
   }
 
@@ -302,55 +333,11 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
     ((IterableLike<RowData, ?>)set).foreach(new AbstractFunction1<RowData, Void>() {
       @Override
       public Void apply(RowData row) {
-        list.add(rowToJsonArray(row));
+        list.add(ScalaUtils.rowToJsonArray(row));
         return null;
       }
     });
     return list;
-  }
-
-  private JsonArray rowToJsonArray(RowData data) {
-    JsonArray array = new JsonArray();
-    ((IterableLike<Object, ?>)data).foreach(new AbstractFunction1<Object, Void>() {
-      @Override
-      public Void apply(Object value) {
-        convertValue(array, value);
-        return null;
-      }
-    });
-    return array;
-  }
-
-  private void convertValue(JsonArray array, Object value) {
-    if (value == null) {
-      array.addNull();
-    } else if (value instanceof scala.math.BigDecimal) {
-      array.add(value.toString());
-    } else if (value instanceof LocalDateTime) {
-      array.add(value.toString());
-    } else if (value instanceof LocalDate) {
-      array.add(value.toString());
-    } else if (value instanceof DateTime) {
-      array.add(Instant.ofEpochMilli(((DateTime) value).getMillis()));
-    } else if (value instanceof UUID) {
-      array.add(value.toString());
-    } else if (value instanceof scala.collection.mutable.ArrayBuffer) {
-      scala.collection.mutable.ArrayBuffer<Object> arrayBuffer = (scala.collection.mutable.ArrayBuffer<Object>) value;
-      JsonArray subArray = new JsonArray();
-      arrayBuffer.foreach(new AbstractFunction1<Object, Void>() {
-
-        @Override
-        public Void apply(Object subValue) {
-          convertValue(subArray, subValue);
-          return null;
-        }
-
-      });
-      array.add(subArray);
-    } else {
-      array.add(value);
-    }
-
   }
   
 }

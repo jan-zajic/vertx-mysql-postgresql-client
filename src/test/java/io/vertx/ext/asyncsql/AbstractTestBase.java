@@ -49,7 +49,7 @@ public abstract class AbstractTestBase {
       if (ar.succeeded()) {
         fn.handle(ar.result());
       } else {
-        context.fail("Should have been a success");
+        context.fail(ar.cause());
       }
     };
   }
