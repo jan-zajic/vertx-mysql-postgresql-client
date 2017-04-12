@@ -16,6 +16,7 @@
 
 package io.vertx.ext.asyncsql.impl;
 
+import com.github.mauricio.async.db.QueryResult;
 import com.github.mauricio.async.db.RowData;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -43,7 +44,7 @@ public final class ScalaUtils {
 
   private ScalaUtils () {}
 
-  public static <T> Future<T> scalaToVertx(scala.concurrent.Future<T> future, ExecutionContext ec) {
+  public static <T> Future<T> scalaToVertx(scala.concurrent.Future future, ExecutionContext ec) {
     Future<T> fut = Future.future();
     future.onComplete(new AbstractFunction1<Try<T>, Void>() {
       @Override
@@ -123,4 +124,5 @@ public final class ScalaUtils {
     });
     return array;
   }
+
 }
