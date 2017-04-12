@@ -21,7 +21,7 @@
  * interface for Vert.x applications that need to interact with a MySQL or PostgreSQL database.
  *
  * It uses Mauricio Linhares https://github.com/mauricio/postgresql-async[async driver] to interact with the MySQL
- * or PostgreSQL databases in a non blocking way
+ * or PostgreSQL databases in a non blocking way.
  *
  * == Using the MySQL and PostgreSQL client
  *
@@ -69,7 +69,7 @@
  * for the `vertx-mysql-postgresql-client` dependency. Once done, launch: `vertx resolve --dir=lib --stack=
  * ./vertx-stack.json`. It downloads the client and its dependencies.
  *
- * == Creating a the client
+ * == Creating a client
  *
  * There are several ways to create a client. Let's go through them all.
  *
@@ -151,9 +151,9 @@
  * Once you've finished with the connection make sure you close it afterwards.
  *
  * The connection is an instance of {@link io.vertx.ext.sql.SQLConnection} which is a common interface used by
- * othe SQL clients.
+ * other SQL clients.
  *
- * You can learn how to use it in the http://foobar[common sql interface] documentation.
+ * You can learn how to use it in the http://vertx.io/docs/vertx-sql-common/$lang/[common sql interface] documentation.
  *
  * === Note about date and timestamps
  *
@@ -194,7 +194,7 @@
  * `maxPoolSize`:: The number of connections that may be kept open. Defaults to `10`.
  * `username`:: The username to connect to the database. Defaults to `postgres` for PostgreSQL and `root` for MySQL.
  * `password`:: The password to connect to the database. Default is not set, i.e. it uses no password.
- * `database`:: The name of the database you want to connect to. Defaults to `test`.
+ * `database`:: The name of the database you want to connect to. Defaults to `testdb`.
  * `charset`:: The name of the character set you want to use for the connection. Defaults to `UTF-8`.
  * `queryTimeout`:: The timeout to wait for a query in milliseconds. Defaults to `10000` (= 10 seconds).
  */
