@@ -227,7 +227,6 @@ public class AsyncSQLConnectionImpl implements SQLConnection {
     throw new UnsupportedOperationException("Not implemented");
   }
 
-  @Override
   @SuppressWarnings("unchecked")
   public <C> C unwrap() {
     return (C) connection;

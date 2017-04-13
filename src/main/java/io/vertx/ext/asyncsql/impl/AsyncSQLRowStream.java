@@ -51,7 +51,6 @@ class AsyncSQLRowStream implements SQLRowStream {
     return columns().indexOf(name);
   }
 
-  @Override
   public List<String> columns() {
     // populate the cache
     if (columns == null) {

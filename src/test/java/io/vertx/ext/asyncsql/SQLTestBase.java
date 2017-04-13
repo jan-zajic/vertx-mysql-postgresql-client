@@ -17,6 +17,20 @@
 package io.vertx.ext.asyncsql;
 
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.Test;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
@@ -28,16 +42,6 @@ import io.vertx.ext.sql.SQLRowStream;
 import io.vertx.ext.sql.UpdateResult;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import org.junit.Test;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
 
 public abstract class SQLTestBase extends AbstractTestBase {
 
@@ -674,53 +678,6 @@ public abstract class SQLTestBase extends AbstractTestBase {
 
   private static final String CREATE_TABLE_STATEMENT = "CREATE TABLE test_table " +
     "(id BIGINT, name VARCHAR(255))";
-
-  @Test
-  public void testSimpleStream(TestContext context) {
-    Async async = context.async();
-    client.getConnection(ar -> {
-      if (ar.failed()) {
-        context.fail(ar.cause());
-        return;
-      }
-
-      // Create table
-      conn = ar.result();
-      setupSimpleTable(conn, ar2 -> {
-
-        conn.queryStream("SELECT name, id FROM test_table ORDER BY name ASC", ar3 -> {
-          if (ar3.failed()) {
-            context.fail(ar3.cause());
-          } else {
-            final SQLRowStream res = ar3.result();
-            context.assertNotNull(res);
-
-            // assert that we have columns and they are valid
-            assertNotNull(res.columns());
-            assertEquals(Arrays.asList("name", "id"), res.columns());
-            // assert the collection is immutable
-            try {
-              res.columns().add("durp!");
-              fail();
-            } catch (RuntimeException e) {
-              // expected!
-            }
-
-            final AtomicInteger count = new AtomicInteger();
-
-            res
-              .handler(row -> {
-                context.assertEquals(Data.NAMES.get(count.getAndIncrement()) ,row.getString(0));
-              })
-              .endHandler(v -> {
-                context.assertEquals(Data.NAMES.size(), count.get());
-                async.complete();
-              });
-          }
-        });
-      });
-    });
-  }
 
   private static class UserDefinedException extends RuntimeException {
   }
